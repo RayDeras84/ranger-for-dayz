@@ -1,0 +1,15 @@
+node_modules/
+dist/
+release/
+.tmp/
+*.log
+.DS_Store
+*.local
+.env
+.env.*
+!.env.example
+coverage/
+renderer-smoke-test-result.json
+steam-probe-test-result.json
+steam-sync-test-result.json
+server-fetch-test-result.json

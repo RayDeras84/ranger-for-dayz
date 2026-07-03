@@ -1,0 +1,29 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Ranger for DayZ icon</title>
+  <desc id="desc">An RDZ monogram with angled beacon marks for Ranger for DayZ.</desc>
+  <defs>
+    <linearGradient id="field" x1="14" y1="14" x2="242" y2="242" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#24392e"/>
+      <stop offset="0.52" stop-color="#17221c"/>
+      <stop offset="1" stop-color="#314533"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(118 120) rotate(90) scale(104)">
+      <stop stop-color="#8ab17c" stop-opacity="0.26"/>
+      <stop offset="1" stop-color="#8ab17c" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="shadow" x="11" y="12" width="234" height="234" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="12" stdDeviation="10" flood-color="#030604" flood-opacity="0.48"/>
+    </filter>
+  </defs>
+
+  <rect x="0" y="0" width="256" height="256" rx="58" fill="#080d0b"/>
+  <rect x="14" y="14" width="228" height="228" rx="49" fill="url(#field)" filter="url(#shadow)"/>
+  <rect x="14" y="14" width="228" height="228" rx="49" fill="url(#glow)"/>
+
+  <path d="M58 96A77 77 0 0 1 163 60" stroke="#82ad79" stroke-width="14" stroke-linecap="round"/>
+  <path d="M84 116A49 49 0 0 1 151 94" stroke="#f0d47b" stroke-width="14" stroke-linecap="round"/>
+  <circle cx="179" cy="102" r="10" fill="#f0d47b"/>
+
+  <text x="43" y="184" fill="#eef2df" font-family="Segoe UI Black, Arial Black, Arial, sans-serif" font-size="88" font-weight="900" letter-spacing="-8">RD</text>
+  <path d="M171 126H216L178 184H220" stroke="#f0d47b" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

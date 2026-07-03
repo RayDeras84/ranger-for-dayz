@@ -1,0 +1,90 @@
+{
+  "name": "ranger-for-dayz",
+  "version": "0.0.2",
+  "description": "An unofficial DayZ server browser, mod helper, and launcher.",
+  "main": "electron/main.js",
+  "type": "module",
+  "scripts": {
+    "prepare-icon": "node scripts/create-icon.mjs",
+    "configure-release": "node scripts/configure-release-metadata.mjs",
+    "dev": "concurrently -k \"vite --host 127.0.0.1\" \"wait-on http://127.0.0.1:5173 && electron .\"",
+    "build": "vite build",
+    "start": "electron .",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "package": "npm run package:win",
+    "package:win": "npm run prepare-icon && npm run build && electron-builder --win nsis",
+    "package:portable": "npm run prepare-icon && npm run build && electron-builder --win portable",
+    "release": "npm run configure-release && npm run prepare-icon && npm run build && electron-builder --win nsis --publish always",
+    "release:signed": "npm run configure-release && npm run prepare-icon && npm run build && electron-builder --win nsis --publish always -c.win.signExecutable=true"
+  },
+  "keywords": [
+    "dayz",
+    "launcher",
+    "steam",
+    "server-browser"
+  ],
+  "author": "",
+  "license": "MIT",
+  "homepage": "https://github.com/RayDeras84/ranger-for-dayz#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/RayDeras84/ranger-for-dayz.git"
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.9",
+    "lucide-react": "^0.468.0",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "steamworks.js": "^0.4.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "concurrently": "^9.1.2",
+    "electron": "^42.5.1",
+    "electron-builder": "^26.15.3",
+    "eslint": "^9.17.0",
+    "vite": "^6.4.3",
+    "vitest": "^4.1.9",
+    "wait-on": "^8.0.1"
+  },
+  "build": {
+    "appId": "com.rangerfordayz.app",
+    "productName": "Ranger for DayZ",
+    "artifactName": "${productName}-Setup-${version}-${arch}.${ext}",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "node_modules/steamworks.js/**/*",
+      "steam_appid.txt",
+      "package.json"
+    ],
+    "asarUnpack": [
+      "node_modules/steamworks.js/dist/**/*"
+    ],
+    "win": {
+      "icon": "build/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "signExecutable": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Ranger for DayZ",
+      "deleteAppDataOnUninstall": false
+    }
+  }
+}
