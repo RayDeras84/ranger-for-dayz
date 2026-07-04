@@ -298,6 +298,7 @@ select {
 .filterLabel,
 .toggle,
 .mapFilter,
+.perspectiveFilter,
 .checkLine {
   display: inline-flex;
   align-items: center;
@@ -334,6 +335,45 @@ select {
   color: #c5cec4;
   background: #1a201d;
   font-size: 13px;
+}
+
+.perspectiveFilter {
+  height: 30px;
+  padding: 0 8px 0 10px;
+  border: 1px solid #3a453e;
+  border-radius: 7px;
+  color: #c5cec4;
+  background: #1a201d;
+  font-size: 13px;
+}
+
+.segmentedControl {
+  display: inline-grid;
+  grid-template-columns: repeat(3, minmax(38px, 1fr));
+  gap: 2px;
+  min-width: 126px;
+  padding: 2px;
+  border: 1px solid #465249;
+  border-radius: 6px;
+  background: #111613;
+}
+
+.segmentedControl button {
+  height: 22px;
+  min-width: 0;
+  padding: 0 7px;
+  border: 0;
+  border-radius: 4px;
+  color: #aeb9ae;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.segmentedControl button:hover,
+.segmentedControl button.active {
+  color: #fff9dc;
+  background: #2a332c;
 }
 
 .mapInputWrap {

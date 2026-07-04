@@ -69,11 +69,10 @@ const serverTableColumns = [
   { key: "players", label: "Players", min: 86 },
   { key: "ping", label: "Ping", min: 78 },
   { key: "map", label: "Map", min: 100 },
-  { key: "mode", label: "Mode", min: 98 },
   { key: "rank", label: "Rank", min: 64 }
 ];
 
-const defaultServerColumnWidths = [340, 112, 86, 130, 118, 70];
+const defaultServerColumnWidths = [420, 112, 86, 150, 70];
 
 function classNames(...values) {
   return values.filter(Boolean).join(" ");
@@ -279,6 +278,7 @@ function App() {
     moddedOnly: false,
     officialOnly: false,
     favoritesOnly: false,
+    perspective: "all",
     map: ""
   });
   const [activeView, setActiveView] = useState("servers");
@@ -496,6 +496,8 @@ function App() {
       if (filters.hideFull && server.maxPlayers && server.players >= server.maxPlayers) return false;
       if (filters.hideEmpty && server.players === 0) return false;
       if (filters.noPassword && server.password) return false;
+      if (filters.perspective === "firstPerson" && !server.firstPerson) return false;
+      if (filters.perspective === "thirdPerson" && server.firstPerson) return false;
       if (filters.moddedOnly && !server.modded && !server.modIds.length) return false;
       if (filters.officialOnly && !server.official) return false;
       if (filters.favoritesOnly && !favoriteSet.has(server.id)) return false;
@@ -511,11 +513,6 @@ function App() {
         return compareValues(pingA, pingB, sort.direction);
       }
       if (sort.key === "map") return compareValues(a.map, b.map, sort.direction);
-      if (sort.key === "mode") {
-        const modeA = `${a.firstPerson ? "1PP" : "3PP"} ${a.modded || a.modIds.length ? "Modded" : "Vanilla"}`;
-        const modeB = `${b.firstPerson ? "1PP" : "3PP"} ${b.modded || b.modIds.length ? "Modded" : "Vanilla"}`;
-        return compareValues(modeA, modeB, sort.direction);
-      }
       if (sort.key === "rank") {
         return compareValues(a.rank ?? Number.MAX_SAFE_INTEGER, b.rank ?? Number.MAX_SAFE_INTEGER, sort.direction);
       }
@@ -1001,6 +998,26 @@ function App() {
             <div className="serverPanel">
               <div className="filterStrip">
                 <span className="filterLabel"><Filter size={16} /> Filters</span>
+                <div className="perspectiveFilter">
+                  <span>Perspective</span>
+                  <div className="segmentedControl" role="group" aria-label="Perspective filter">
+                    {[
+                      ["all", "All"],
+                      ["firstPerson", "1PP"],
+                      ["thirdPerson", "3PP"]
+                    ].map(([value, label]) => (
+                      <button
+                        type="button"
+                        className={classNames(filters.perspective === value && "active")}
+                        key={value}
+                        onClick={() => setFilters((current) => ({ ...current, perspective: value }))}
+                        aria-pressed={filters.perspective === value}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
                 <div className="mapFilter" ref={mapFilterRef}>
                   <span>Map</span>
                   <span className="mapInputWrap">
@@ -1167,7 +1184,6 @@ function App() {
                           {pingLabel(server)}
                         </span>
                         <span>{server.map}</span>
-                        <span>{server.firstPerson ? "1PP" : "3PP"} {server.modded || server.modIds.length ? "Modded" : "Vanilla"}</span>
                         <span>{server.rank ? `#${server.rank}` : "Live"}</span>
                       </div>
                     );
@@ -1333,6 +1349,7 @@ function ServerDetails({
       ? `${status.playableInstalled}/${status.playableTotal} playable mods installed; ${status.blocked.length} stale listing ${status.blocked.length === 1 ? "entry" : "entries"} ignored`
       : `${status.installed}/${status.total} required mods installed`
     : "No published mod list found";
+  const serverType = server.modded || (server.modIds || []).length ? "Modded" : "Vanilla";
 
   return (
     <aside className="details">
@@ -1350,6 +1367,7 @@ function ServerDetails({
         <div><strong>{server.players}/{server.maxPlayers || "?"}</strong><span>Players</span></div>
         <div><strong>{server.map}</strong><span>Map</span></div>
         <div><strong>{server.firstPerson ? "1PP" : "3PP"}</strong><span>Perspective</span></div>
+        <div><strong>{serverType}</strong><span>Server type</span></div>
         <div><strong>{server.version || "Unknown"}</strong><span>Version</span></div>
       </div>
 
