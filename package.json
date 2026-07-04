@@ -31,6 +31,10 @@
     "type": "git",
     "url": "https://github.com/RayDeras84/ranger-for-dayz.git"
   },
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/RayDeras84"
+  },
   "dependencies": {
     "electron-updater": "^6.8.9",
     "lucide-react": "^0.468.0",

@@ -88,6 +88,32 @@ function getRepositoryUrl() {
     || "";
 }
 
+function normalizeFundingUrl(value) {
+  const candidate = typeof value === "string" ? value : value?.url;
+  const raw = String(candidate || "").trim();
+  if (!raw) return "";
+
+  try {
+    const parsed = new URL(raw);
+    if (parsed.protocol !== "https:" || parsed.hostname !== "github.com") return "";
+    if (!/^\/sponsors\/[A-Za-z0-9-]+\/?$/i.test(parsed.pathname)) return "";
+    parsed.pathname = parsed.pathname.replace(/\/$/, "");
+    parsed.search = "";
+    parsed.hash = "";
+    return parsed.toString();
+  } catch {
+    return "";
+  }
+}
+
+function getFundingUrl() {
+  const funding = packageMetadata.funding;
+  if (Array.isArray(funding)) {
+    return funding.map((entry) => normalizeFundingUrl(entry)).find(Boolean) || "";
+  }
+  return normalizeFundingUrl(funding);
+}
+
 function getAppInfo() {
   const repositoryUrl = getRepositoryUrl();
   return {
@@ -109,6 +135,7 @@ function getAppInfo() {
     latestReleaseUrl: repositoryUrl ? `${repositoryUrl}/releases/latest` : "",
     licenseUrl: repositoryUrl ? `${repositoryUrl}/blob/main/LICENSE` : "",
     noticesUrl: repositoryUrl ? `${repositoryUrl}/blob/main/THIRD_PARTY_NOTICES.md` : "",
+    fundingUrl: getFundingUrl(),
     update: updateStatus
   };
 }
@@ -1462,7 +1489,10 @@ function isAllowedExternalUrl(value) {
     const parsed = new URL(url);
     if (parsed.protocol !== "https:") return false;
     if (parsed.hostname === "www.battlemetrics.com") return parsed.pathname.startsWith("/servers/dayz");
-    if (parsed.hostname === "github.com") return /^\/[^/]+\/ranger-for-dayz(?:\/|$)/i.test(parsed.pathname);
+    if (parsed.hostname === "github.com") {
+      if (/^\/[^/]+\/ranger-for-dayz(?:\/|$)/i.test(parsed.pathname)) return true;
+      return Boolean(normalizeFundingUrl(url) && normalizeFundingUrl(url) === getFundingUrl());
+    }
     return false;
   } catch {
     return false;

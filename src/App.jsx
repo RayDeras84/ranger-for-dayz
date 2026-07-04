@@ -5,6 +5,7 @@ import {
   Download,
   ExternalLink,
   Filter,
+  Heart,
   History,
   Info,
   Loader2,
@@ -59,6 +60,7 @@ const defaultAppInfo = {
   latestReleaseUrl: "",
   licenseUrl: "",
   noticesUrl: "",
+  fundingUrl: "https://github.com/sponsors/RayDeras84",
   update: defaultUpdateStatus
 };
 
@@ -960,6 +962,10 @@ function App() {
           <Info size={19} />
           <span>About</span>
         </button>
+        <button className="railButton supportButton" onClick={() => openExternalLink(appInfo.fundingUrl)} title="Support Ranger for DayZ" disabled={!appInfo.fundingUrl}>
+          <Heart size={19} />
+          <span>Support</span>
+        </button>
       </aside>
 
       <main className="main">
@@ -1622,6 +1628,10 @@ function AboutView({ appInfo, onCheckUpdates, onInstallUpdate, onOpenExternal })
         <button className="linkButton" onClick={() => onOpenExternal(appInfo.repositoryUrl)} disabled={!appInfo.repositoryUrl}>
           <ExternalLink size={16} />
           GitHub
+        </button>
+        <button className="linkButton supportLink" onClick={() => onOpenExternal(appInfo.fundingUrl)} disabled={!appInfo.fundingUrl}>
+          <Heart size={16} />
+          Support
         </button>
         <button className="linkButton" onClick={() => onOpenExternal(appInfo.licenseUrl)} disabled={!appInfo.licenseUrl}>
           <ExternalLink size={16} />

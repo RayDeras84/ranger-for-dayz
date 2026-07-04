@@ -76,6 +76,7 @@ const fallbackApi = {
     latestReleaseUrl: "",
     licenseUrl: "",
     noticesUrl: "",
+    fundingUrl: "https://github.com/sponsors/RayDeras84",
     update: {
       status: "disabled",
       message: "Automatic updates are available in the desktop app.",

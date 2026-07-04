@@ -86,6 +86,23 @@ button {
   border-color: #39443c;
 }
 
+.railButton:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.supportButton {
+  margin-top: 16px;
+  color: #f1d996;
+}
+
+.supportButton:hover,
+.supportButton:focus-visible {
+  color: #fff3bd;
+  background: #2a2519;
+  border-color: #5b4d29;
+}
+
 .main {
   display: grid;
   grid-template-rows: auto auto 1fr;
@@ -1199,6 +1216,17 @@ body.resizingColumns * {
   min-width: 120px;
   margin-top: 0;
   padding: 0 12px;
+}
+
+.aboutLinks .supportLink {
+  border-color: #6a5a2d;
+  color: #fff0b8;
+  background: #252116;
+}
+
+.aboutLinks .supportLink:hover,
+.aboutLinks .supportLink:focus-visible {
+  background: #2f2919;
 }
 
 .aboutDisclaimer {
