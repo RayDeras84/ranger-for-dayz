@@ -13,8 +13,8 @@
     "lint": "eslint .",
     "test": "vitest run",
     "package": "npm run package:win",
-    "package:win": "npm run prepare-icon && npm run build && electron-builder --win nsis",
-    "package:portable": "npm run prepare-icon && npm run build && electron-builder --win portable",
+    "package:win": "node scripts/package-local.mjs nsis",
+    "package:portable": "node scripts/package-local.mjs portable",
     "release": "npm run configure-release && npm run prepare-icon && npm run build && electron-builder --win nsis --publish always",
     "release:signed": "npm run configure-release && npm run prepare-icon && npm run build && electron-builder --win nsis --publish always -c.win.signExecutable=true"
   },

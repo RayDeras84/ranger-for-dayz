@@ -27,6 +27,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Lint
+        run: npm.cmd run lint
+
+      - name: Test
+        run: npm.cmd test
+
+      - name: Audit
+        run: npm.cmd audit --omit=optional
+
       - name: Build and publish release assets
         env:
           GH_TOKEN: ${{ github.token }}

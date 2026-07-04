@@ -61,12 +61,15 @@ Current verification notes:
 - `src/styles.css`: app-wide desktop UI styling.
 - `scripts/create-icon.mjs`: generated app icon.
 - `scripts/configure-release-metadata.mjs`: CI helper that injects the GitHub owner/repo into release builds.
+- `scripts/package-local.mjs`: local Windows package wrapper that writes installer output outside OneDrive-backed repo folders by default.
 - `scripts/qa-server-workflows.mjs`: network QA for server search/filter workflows.
 - `eslint.config.js`: public-repo ESLint configuration.
 
 ## Releases And Updates
 
 Generated installers belong in GitHub Releases, not in git. The `release/` directory is ignored.
+
+Local `npm.cmd run package` writes to `%TEMP%\ranger-for-dayz-release` by default to avoid Windows/OneDrive file locking around electron-builder's temporary folders. Set `RFDZ_RELEASE_DIR` to choose a different output folder.
 
 See [RELEASE.md](RELEASE.md) for the Windows installer, signing, and auto-update release flow.
 

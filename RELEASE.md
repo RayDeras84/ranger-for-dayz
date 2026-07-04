@@ -21,7 +21,16 @@ npm.cmd install
 npm.cmd run package
 ```
 
-The local installer is written to `release/`. Local builds are unsigned by default.
+The local installer is written to `%TEMP%\ranger-for-dayz-release` by default. This keeps electron-builder's temporary package folders outside OneDrive-backed project folders, where Windows file indexing/sync can hold short-lived locks.
+
+To choose another local output folder:
+
+```powershell
+$env:RFDZ_RELEASE_DIR = "C:\Builds\ranger-for-dayz-release"
+npm.cmd run package
+```
+
+Local builds are unsigned by default.
 
 To build a portable app for quick testing:
 
