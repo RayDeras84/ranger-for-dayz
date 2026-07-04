@@ -66,13 +66,13 @@ const defaultAppInfo = {
 
 const serverTableColumns = [
   { key: "name", label: "Server", min: 280 },
-  { key: "players", label: "Players", min: 86 },
+  { key: "players", label: "Players", min: 74 },
   { key: "ping", label: "Ping", min: 78 },
   { key: "map", label: "Map", min: 100 },
   { key: "rank", label: "Rank", min: 64 }
 ];
 
-const defaultServerColumnWidths = [420, 112, 86, 150, 70];
+const defaultServerColumnWidths = [420, 88, 86, 150, 70];
 
 function classNames(...values) {
   return values.filter(Boolean).join(" ");

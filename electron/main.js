@@ -1551,7 +1551,7 @@ async function launchDayz({ server, playerName, modPaths = [], extraArgs = "", p
 
 function createWindow() {
   const win = new BrowserWindow({
-    width: 1560,
+    width: 1680,
     height: 900,
     minWidth: 1080,
     minHeight: 680,
