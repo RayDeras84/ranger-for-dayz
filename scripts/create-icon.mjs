@@ -1,9 +1,132 @@
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 
 const outDir = path.resolve("build");
+const iconSvgPath = path.resolve("public", "icon.svg");
+const icoPath = path.join(outDir, "icon.ico");
+const sizes = [16, 24, 32, 48, 64, 128, 256];
+
 fs.mkdirSync(outDir, { recursive: true });
+
+if (!fs.existsSync(iconSvgPath)) {
+  throw new Error(`Icon source not found: ${iconSvgPath}`);
+}
+
+function existingFile(candidate) {
+  return candidate && fs.existsSync(candidate) ? candidate : null;
+}
+
+function where(command) {
+  const result = spawnSync("where.exe", [command], {
+    encoding: "utf8",
+    stdio: "pipe"
+  });
+  if (result.status !== 0) {
+    return [];
+  }
+  return result.stdout
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
+
+function findBrowser() {
+  const programFiles = process.env.ProgramFiles;
+  const programFilesX86 = process.env["ProgramFiles(x86)"];
+  const localAppData = process.env.LOCALAPPDATA;
+  const candidates = [
+    process.env.RFDZ_CHROME_PATH,
+    programFiles && path.join(programFiles, "Google", "Chrome", "Application", "chrome.exe"),
+    programFilesX86 && path.join(programFilesX86, "Google", "Chrome", "Application", "chrome.exe"),
+    localAppData && path.join(localAppData, "Google", "Chrome", "Application", "chrome.exe"),
+    programFiles && path.join(programFiles, "Microsoft", "Edge", "Application", "msedge.exe"),
+    programFilesX86 && path.join(programFilesX86, "Microsoft", "Edge", "Application", "msedge.exe"),
+    localAppData && path.join(localAppData, "Microsoft", "Edge", "Application", "msedge.exe"),
+    ...where("chrome.exe"),
+    ...where("msedge.exe")
+  ];
+
+  const browser = candidates.map(existingFile).find(Boolean);
+  if (!browser) {
+    throw new Error(
+      "Chrome or Edge is required to render public/icon.svg. Install one, or set RFDZ_CHROME_PATH."
+    );
+  }
+  return browser;
+}
+
+const browserPath = findBrowser();
+const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "rfdz-icon-"));
+const sourceSvg = fs
+  .readFileSync(iconSvgPath, "utf8")
+  .replace(/^\uFEFF/, "")
+  .replace(/<\?xml[^>]*\?>\s*/i, "");
+
+function setSvgRootAttribute(svg, name, value) {
+  return svg.replace(/<svg\b[^>]*>/i, (tag) => {
+    const attrPattern = new RegExp(`\\s${name}=("|')[^"']*\\1`, "i");
+    if (attrPattern.test(tag)) {
+      return tag.replace(attrPattern, ` ${name}="${value}"`);
+    }
+    return tag.replace(/^<svg\b/i, `<svg ${name}="${value}"`);
+  });
+}
+
+function sizedSvg(size) {
+  return setSvgRootAttribute(setSvgRootAttribute(sourceSvg, "width", size), "height", size);
+}
+
+function sleep(ms) {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+}
+
+function waitForFile(filePath) {
+  const start = Date.now();
+  while (!fs.existsSync(filePath)) {
+    if (Date.now() - start > 5000) {
+      throw new Error(`Expected icon render was not created: ${filePath}`);
+    }
+    sleep(100);
+  }
+}
+
+try {
+  for (const size of sizes) {
+    const pngPath = path.join(tempDir, `icon-${size}.png`);
+    const sizedSvgPath = path.join(tempDir, `icon-${size}.svg`);
+    const profilePath = path.join(tempDir, `chrome-profile-${size}`);
+    fs.writeFileSync(sizedSvgPath, sizedSvg(size));
+
+    const result = spawnSync(browserPath, [
+      "--headless=new",
+      "--disable-gpu",
+      "--no-first-run",
+      "--no-default-browser-check",
+      "--hide-scrollbars",
+      `--user-data-dir=${profilePath}`,
+      "--default-background-color=00000000",
+      `--screenshot=${pngPath}`,
+      `--window-size=${size},${size}`,
+      pathToFileURL(sizedSvgPath).href
+    ], {
+      encoding: "utf8",
+      stdio: "pipe"
+    });
+
+    if (result.status !== 0) {
+      process.stderr.write(result.stderr || result.stdout);
+      process.exit(result.status || 1);
+    }
+
+    waitForFile(pngPath);
+    const stat = fs.statSync(pngPath);
+    if (stat.size === 0) {
+      throw new Error(`Rendered empty PNG for ${size}px icon.`);
+    }
+  }
 
 const psScript = String.raw`
 using namespace System.Drawing
@@ -11,84 +134,15 @@ using namespace System.Drawing.Drawing2D
 using namespace System.Drawing.Imaging
 using namespace System.IO
 
+param(
+  [string]$ImageDir,
+  [string]$IcoPath,
+  [string]$SizeList
+)
+
+$ErrorActionPreference = "Stop"
 Add-Type -AssemblyName System.Drawing
-
-$outDir = Resolve-Path "build"
-$icoPath = Join-Path $outDir "icon.ico"
-
-function Brush($hex) {
-  return [SolidBrush]::new([ColorTranslator]::FromHtml($hex))
-}
-
-function PenC($hex, $width) {
-  $p = [Pen]::new([ColorTranslator]::FromHtml($hex), $width)
-  $p.StartCap = [LineCap]::Round
-  $p.EndCap = [LineCap]::Round
-  return $p
-}
-
-function RoundedRectPath($x, $y, $w, $h, $r) {
-  $p = [GraphicsPath]::new()
-  $d = $r * 2
-  $p.AddArc($x, $y, $d, $d, 180, 90)
-  $p.AddArc($x + $w - $d, $y, $d, $d, 270, 90)
-  $p.AddArc($x + $w - $d, $y + $h - $d, $d, $d, 0, 90)
-  $p.AddArc($x, $y + $h - $d, $d, $d, 90, 90)
-  $p.CloseFigure()
-  return $p
-}
-
-function FillRound($g, $x, $y, $w, $h, $r, $hex) {
-  $p = RoundedRectPath $x $y $w $h $r
-  $g.FillPath((Brush $hex), $p)
-  $p.Dispose()
-}
-
-function DrawIconBitmap($size) {
-  $bmp = [Bitmap]::new($size, $size, [PixelFormat]::Format32bppArgb)
-  $g = [Graphics]::FromImage($bmp)
-  $g.SmoothingMode = [SmoothingMode]::AntiAlias
-  $g.TextRenderingHint = [System.Drawing.Text.TextRenderingHint]::AntiAliasGridFit
-  $scale = $size / 256
-  $g.ScaleTransform($scale, $scale)
-  $g.Clear([Color]::Transparent)
-
-  FillRound $g 0 0 256 256 58 "#080d0b"
-
-  $field = RoundedRectPath 14 14 228 228 49
-  $fieldBrush = [LinearGradientBrush]::new([RectangleF]::new(14, 14, 228, 228), [ColorTranslator]::FromHtml("#24392e"), [ColorTranslator]::FromHtml("#314533"), 135)
-  $g.FillPath($fieldBrush, $field)
-  $fieldBrush.Dispose()
-  $field.Dispose()
-
-  $green = PenC "#82ad79" 13
-  $yellow = PenC "#f0d47b" 13
-  $g.DrawArc($green, [RectangleF]::new(51, 51, 154, 154), 205, 92)
-  $g.DrawArc($yellow, [RectangleF]::new(79, 79, 98, 98), 205, 92)
-  $g.FillEllipse((Brush "#f0d47b"), 169, 92, 20, 20)
-  $green.Dispose()
-  $yellow.Dispose()
-
-  $font = [Font]::new("Segoe UI Black", 88, [FontStyle]::Bold, [GraphicsUnit]::Pixel)
-  $format = [StringFormat]::GenericTypographic
-  $format.FormatFlags = $format.FormatFlags -bor [StringFormatFlags]::NoClip
-  $g.DrawString("RD", $font, (Brush "#eef2df"), [PointF]::new(43, 99), $format)
-  $font.Dispose()
-  $format.Dispose()
-
-  $zPen = PenC "#f0d47b" 13
-  $zPen.LineJoin = [LineJoin]::Round
-  $g.DrawLines($zPen, [PointF[]]@(
-    [PointF]::new(171, 126),
-    [PointF]::new(216, 126),
-    [PointF]::new(178, 184),
-    [PointF]::new(220, 184)
-  ))
-  $zPen.Dispose()
-
-  $g.Dispose()
-  return $bmp
-}
+$Sizes = $SizeList.Split(",") | ForEach-Object { [int]$_ }
 
 function BitmapToDib($bmp) {
   $size = $bmp.Width
@@ -131,10 +185,16 @@ function BitmapToDib($bmp) {
   return $dib
 }
 
-$sizes = @(32, 64, 128, 256)
 $images = @()
-foreach ($size in $sizes) {
-  $bmp = DrawIconBitmap $size
+foreach ($size in $Sizes) {
+  $pngPath = Join-Path $ImageDir ("icon-{0}.png" -f $size)
+  $source = [Image]::FromFile($pngPath)
+  $bmp = [Bitmap]::new($size, $size, [PixelFormat]::Format32bppArgb)
+  $g = [Graphics]::FromImage($bmp)
+  $g.CompositingMode = [CompositingMode]::SourceCopy
+  $g.DrawImage($source, 0, 0, $size, $size)
+  $g.Dispose()
+  $source.Dispose()
   $images += [PSCustomObject]@{ Size = $size; Dib = BitmapToDib $bmp }
   $bmp.Dispose()
 }
@@ -164,19 +224,25 @@ foreach ($image in $images) {
 }
 
 $iconWriter.Flush()
-[File]::WriteAllBytes($icoPath, $iconStream.ToArray())
+[File]::WriteAllBytes([Path]::GetFullPath($IcoPath), $iconStream.ToArray())
 $iconWriter.Dispose()
 $iconStream.Dispose()
 `;
 
-const scriptPath = path.join(outDir, "create-icon.ps1");
+const scriptPath = path.join(tempDir, "create-icon.ps1");
 fs.writeFileSync(scriptPath, psScript);
 const result = spawnSync("powershell.exe", [
   "-NoProfile",
   "-ExecutionPolicy",
   "Bypass",
   "-File",
-  scriptPath
+  scriptPath,
+  "-ImageDir",
+  tempDir,
+  "-IcoPath",
+  icoPath,
+  "-SizeList",
+  sizes.join(",")
 ], {
   encoding: "utf8",
   stdio: "pipe"
@@ -186,4 +252,7 @@ fs.rmSync(scriptPath, { force: true });
 if (result.status !== 0) {
   process.stderr.write(result.stderr || result.stdout);
   process.exit(result.status || 1);
+}
+} finally {
+  fs.rmSync(tempDir, { recursive: true, force: true });
 }
