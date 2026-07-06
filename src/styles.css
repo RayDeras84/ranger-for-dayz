@@ -1142,6 +1142,16 @@ body.resizingColumns * {
   margin-bottom: 16px;
 }
 
+.aboutGrid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  max-width: 960px;
+}
+
+.aboutGrid.compact {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 10px 0;
+}
+
 .pathRow,
 .infoRow {
   min-width: 0;
@@ -1277,6 +1287,29 @@ body.resizingColumns * {
   line-height: 1.5;
 }
 
+.detailsPanel {
+  max-width: 960px;
+  margin-top: 14px;
+  padding: 10px 12px;
+  border: 1px solid #2e3832;
+  border-radius: 8px;
+  background: #131815;
+}
+
+.detailsPanel summary {
+  cursor: pointer;
+  color: #d7dfd4;
+  font-weight: 800;
+}
+
+.detailsPanel summary::marker {
+  color: #9fb46f;
+}
+
+.detailsPanel .toolButton {
+  margin-top: 4px;
+}
+
 .missingText {
   color: #ddaa85;
 }
@@ -1334,6 +1367,10 @@ body.resizingColumns * {
 
 .settingsForm {
   max-width: 720px;
+}
+
+.settingsDiagnostics {
+  max-width: 100%;
 }
 
 .settingsAction {

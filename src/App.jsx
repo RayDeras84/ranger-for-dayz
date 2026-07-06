@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Activity,
   ChevronDown,
+  Clipboard,
   Download,
   ExternalLink,
   Filter,
@@ -44,7 +45,7 @@ const defaultUpdateStatus = {
 
 const defaultAppInfo = {
   productName: "Ranger for DayZ",
-  version: "0.0.2",
+  version: "0.0.3",
   description: "An unofficial DayZ server browser, mod helper, and launcher.",
   license: "MIT",
   isPackaged: false,
@@ -1591,6 +1592,21 @@ function AboutView({ appInfo, onCheckUpdates, onInstallUpdate, onOpenExternal })
   const isBusy = Boolean(update.checking || ["checking", "downloading", "installing"].includes(update.status));
   const canInstall = update.status === "downloaded";
   const updateVersion = update.updateInfo?.version || "";
+  const platformLabel = [appInfo.platform, appInfo.arch].filter(Boolean).join(" ") || "Unknown";
+  const diagnostics = [
+    ["App", appInfo.productName || "Ranger for DayZ"],
+    ["Version", appInfo.version || "Unknown"],
+    ["Build", appInfo.isPackaged ? "Packaged" : "Development"],
+    ["Platform", platformLabel],
+    ["Electron", versions.electron || "Preview"],
+    ["Chrome", versions.chrome || "Preview"],
+    ["Node", versions.node || "Preview"]
+  ];
+
+  function copyDiagnostics() {
+    const text = diagnostics.map(([label, value]) => `${label}: ${value}`).join("\n");
+    globalThis.navigator?.clipboard?.writeText(text).catch(() => {});
+  }
 
   return (
     <section className="singlePanel">
@@ -1606,10 +1622,6 @@ function AboutView({ appInfo, onCheckUpdates, onInstallUpdate, onOpenExternal })
         <InfoRow label="App" value={appInfo.productName || "Ranger for DayZ"} />
         <InfoRow label="Version" value={appInfo.version || "Unknown"} />
         <InfoRow label="Build" value={appInfo.isPackaged ? "Packaged" : "Development"} />
-        <InfoRow label="Platform" value={[appInfo.platform, appInfo.arch].filter(Boolean).join(" ") || "Unknown"} />
-        <InfoRow label="Electron" value={versions.electron || "Preview"} />
-        <InfoRow label="Chrome" value={versions.chrome || "Preview"} />
-        <InfoRow label="Node" value={versions.node || "Preview"} />
         <InfoRow label="License" value={appInfo.license || "Unknown"} />
       </div>
 
@@ -1664,6 +1676,20 @@ function AboutView({ appInfo, onCheckUpdates, onInstallUpdate, onOpenExternal })
       <p className="aboutDisclaimer">
         Ranger for DayZ is an unofficial community tool and is not affiliated with Bohemia Interactive, DayZ, Valve, Steam, or BattleMetrics.
       </p>
+
+      <details className="detailsPanel">
+        <summary>Technical details</summary>
+        <div className="aboutGrid compact">
+          <InfoRow label="Platform" value={platformLabel} />
+          <InfoRow label="Electron" value={versions.electron || "Preview"} />
+          <InfoRow label="Chrome" value={versions.chrome || "Preview"} />
+          <InfoRow label="Node" value={versions.node || "Preview"} />
+        </div>
+        <button className="toolButton" onClick={copyDiagnostics}>
+          <Clipboard size={17} />
+          Copy diagnostics
+        </button>
+      </details>
     </section>
   );
 }
@@ -1683,32 +1709,14 @@ function SettingsView({ paths, state, steamInfo, onChange, onProbeSteam, onDetec
       <div className="sectionHeader">
         <div>
           <h2>Settings</h2>
-          <p>Detected Steam and DayZ paths plus launch behavior.</p>
+          <p>Launch preferences and local setup checks.</p>
         </div>
         <button className="toolButton" onClick={onDetect}>
           <SlidersHorizontal size={17} />
           Detect
         </button>
       </div>
-      <div className="settingsGrid">
-        <PathRow label="Steam" value={paths.steamPath} />
-        <PathRow label="DayZ" value={paths.dayzPath} />
-        <PathRow label="Launcher exe" value={paths.dayzExe || paths.dayzRawExe} />
-      </div>
       <div className="settingsForm">
-        <button className="toolButton settingsAction" onClick={onProbeSteam}>
-          <Activity size={17} />
-          Check Steamworks
-        </button>
-        {steamInfo && (
-          <div className={classNames("steamInfo", steamInfo.ok === false && "bad")}>
-            {steamInfo.ok === false ? (
-              <span>{steamInfo.message || "Steamworks is not connected."}</span>
-            ) : (
-              <span>{steamInfo.playerName} · app {steamInfo.appId} · {steamInfo.subscribedCount} subscriptions</span>
-            )}
-          </div>
-        )}
         <label>
           Default survivor name
           <input value={state.playerName} onChange={(event) => onChange({ playerName: event.target.value })} />
@@ -1730,6 +1738,27 @@ function SettingsView({ paths, state, steamInfo, onChange, onProbeSteam, onDetec
           <Shield size={16} />
           Use BattlEye launcher when available
         </label>
+        <details className="detailsPanel settingsDiagnostics">
+          <summary>Detected paths and diagnostics</summary>
+          <div className="settingsGrid">
+            <PathRow label="Steam" value={paths.steamPath} />
+            <PathRow label="DayZ" value={paths.dayzPath} />
+            <PathRow label="Launcher exe" value={paths.dayzExe || paths.dayzRawExe} />
+          </div>
+          <button className="toolButton settingsAction" onClick={onProbeSteam}>
+            <Activity size={17} />
+            Check Steamworks
+          </button>
+          {steamInfo && (
+            <div className={classNames("steamInfo", steamInfo.ok === false && "bad")}>
+              {steamInfo.ok === false ? (
+                <span>{steamInfo.message || "Steamworks is not connected."}</span>
+              ) : (
+                <span>{steamInfo.playerName} - app {steamInfo.appId} - {steamInfo.subscribedCount} subscriptions</span>
+              )}
+            </div>
+          )}
+        </details>
       </div>
     </section>
   );

@@ -60,7 +60,7 @@ const fallbackApi = {
   getAppInfo: async () => ({
     name: "Ranger for DayZ",
     productName: "Ranger for DayZ",
-    version: "0.0.2",
+    version: "0.0.3",
     description: "An unofficial DayZ server browser, mod helper, and launcher.",
     license: "MIT",
     isPackaged: false,
