@@ -58,7 +58,7 @@ npm.cmd run package:portable
    git push origin main --tags
    ```
 
-5. The GitHub Actions `Release` workflow builds the installer, configures the package metadata from `GITHUB_REPOSITORY`, and publishes draft release assets.
+5. The GitHub Actions `Release` workflow builds the installer, configures the package metadata from `GITHUB_REPOSITORY`, and uploads draft release assets.
 6. Review the draft release notes and publish the release when ready.
 
 Automatic updates read from the published GitHub Release assets. Users only receive a new version after the release is published.

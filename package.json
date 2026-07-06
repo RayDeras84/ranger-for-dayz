@@ -15,7 +15,7 @@
     "package": "npm run package:win",
     "package:win": "node scripts/package-local.mjs nsis",
     "package:portable": "node scripts/package-local.mjs portable",
-    "release": "npm run configure-release && npm run prepare-icon && npm run build && electron-builder --win nsis --publish always"
+    "release": "npm run configure-release && npm run prepare-icon && npm run build && electron-builder --win nsis --publish never"
   },
   "keywords": [
     "dayz",
@@ -54,7 +54,7 @@
   "build": {
     "appId": "com.rangerfordayz.app",
     "productName": "Ranger for DayZ",
-    "artifactName": "${productName}-Setup-${version}-${arch}.${ext}",
+    "artifactName": "Ranger-for-DayZ-Setup-${version}-${arch}.${ext}",
     "directories": {
       "output": "release"
     },
