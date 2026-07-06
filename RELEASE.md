@@ -6,6 +6,8 @@ Ranger for DayZ ships Windows builds through GitHub Releases. Do not commit gene
 
 The Windows release workflow builds an NSIS installer and uploads the installer/update artifacts to the GitHub Release for the tag.
 
+Release builds use the committed `build/icon.ico`. When changing `public/icon.svg`, run `npm.cmd run prepare-icon` locally and commit the regenerated icon before tagging a release.
+
 Expected assets include:
 
 - `Ranger-for-DayZ-Setup-<version>-x64.exe`

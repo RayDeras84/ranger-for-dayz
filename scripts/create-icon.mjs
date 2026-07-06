@@ -113,8 +113,13 @@ try {
       pathToFileURL(sizedSvgPath).href
     ], {
       encoding: "utf8",
-      stdio: "pipe"
+      stdio: "pipe",
+      timeout: 30000
     });
+
+    if (result.error) {
+      throw result.error;
+    }
 
     if (result.status !== 0) {
       process.stderr.write(result.stderr || result.stdout);
