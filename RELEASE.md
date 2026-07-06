@@ -65,15 +65,10 @@ Automatic updates read from the published GitHub Release assets. Users only rece
 
 ## Signing
 
-Unsigned builds work, but Windows may show SmartScreen or "Unknown Publisher" warnings. Signed releases are strongly preferred before broad public distribution.
+Current release plan: publish unsigned Windows installers so the project can stay cost-free.
 
-The current workflow supports traditional Windows code signing when these repository secrets are configured:
+Users may see Windows SmartScreen or "Unknown Publisher" warnings when installing a release, especially while the app is new. This is expected for an unsigned Windows app. Release notes should tell users to download installers only from this repository's GitHub Releases page.
 
-- `WIN_CSC_LINK`: a path, URL, or base64 value for the signing certificate.
-- `WIN_CSC_KEY_PASSWORD`: the certificate password.
+Do not use a self-signed certificate for public releases. It would still require users to manually trust the certificate and can make the install path feel less clear.
 
-The workflow passes the same values as `CSC_LINK` and `CSC_KEY_PASSWORD` for electron-builder compatibility. When both secrets exist, it runs `npm.cmd run release:signed`; otherwise it publishes an unsigned draft build.
-
-Do not commit certificates, passwords, or signing tokens to the repository.
-
-Azure Trusted Signing is another good option, especially for CI, but it requires a Microsoft signing account and additional electron-builder `win.azureSignOptions` configuration.
+Possible future no-cost path: apply for SignPath Foundation after the project is public and has enough open-source project context. Paid code signing and Microsoft Trusted Signing are intentionally out of scope for now.

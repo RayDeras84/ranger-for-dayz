@@ -69,6 +69,8 @@ Current verification notes:
 
 Generated installers belong in GitHub Releases, not in git. The `release/` directory is ignored.
 
+Windows installers are currently unsigned so this project can stay cost-free. Windows may show an "Unknown Publisher" or SmartScreen warning when installing a release, especially while the app is new. Download releases only from this repository's GitHub Releases page.
+
 Local `npm.cmd run package` writes to `%TEMP%\ranger-for-dayz-release` by default to avoid Windows/OneDrive file locking around electron-builder's temporary folders. Set `RFDZ_RELEASE_DIR` to choose a different output folder.
 
 See [RELEASE.md](RELEASE.md) for the Windows installer, signing, and auto-update release flow.

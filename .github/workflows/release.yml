@@ -36,17 +36,7 @@ jobs:
       - name: Audit
         run: npm.cmd audit --omit=optional
 
-      - name: Build and publish release assets
+      - name: Build and publish unsigned release assets
         env:
           GH_TOKEN: ${{ github.token }}
-          WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
-          WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
-          CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
-          CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
-        shell: pwsh
-        run: |
-          if ($env:WIN_CSC_LINK -and $env:WIN_CSC_KEY_PASSWORD) {
-            npm.cmd run release:signed
-          } else {
-            npm.cmd run release
-          }
+        run: npm.cmd run release
