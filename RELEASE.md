@@ -40,6 +40,14 @@ To build a portable app for quick testing:
 npm.cmd run package:portable
 ```
 
+To build a local NSIS installer that is wired to the GitHub update feed for private-repo update testing:
+
+```powershell
+npm.cmd run package:update-test
+```
+
+This writes to `%TEMP%\ranger-for-dayz-release` by default and does not upload anything.
+
 ## GitHub Release Flow
 
 1. Update `version` in `package.json`.
@@ -64,6 +72,32 @@ npm.cmd run package:portable
 6. Review the draft release notes and publish the release when ready.
 
 Automatic updates read from the published GitHub Release assets. Users only receive a new version after the release is published.
+
+## Auto-Update Test Flow
+
+Automatic update checks only work from packaged Windows installer builds. Vite previews, `npm.cmd start`, and portable/manual builds without update metadata will report that automatic updates are unavailable or will not find a feed.
+
+GitHub draft releases are not visible to the updater. The newer version being tested must be a published GitHub Release with the installer, `.blockmap`, and `latest.yml` assets.
+
+While this repository is private, launch the installed app from a PowerShell session that has a GitHub token with read access to the private repository:
+
+```powershell
+$env:GH_TOKEN = "<token>"
+& "$env:LOCALAPPDATA\Programs\Ranger for DayZ\Ranger for DayZ.exe"
+```
+
+Do not commit or embed this token. Public releases do not need a token once the repository is public.
+
+Recommended test sequence:
+
+1. Build or download an installer for the older version. For private-repo testing before the app is public, prefer `npm.cmd run package:update-test` so the installed app knows to use private GitHub release metadata.
+2. Install the older version.
+3. Bump `version` in `package.json` and `package-lock.json` to the next version.
+4. Commit, tag, and push the new version tag.
+5. Let the release workflow create the draft release assets.
+6. Publish the new release.
+7. Launch the older installed app with `GH_TOKEN` set while the repository is private.
+8. In the app, open About, click Check, wait for the download to finish, then click Install.
 
 ## Signing
 

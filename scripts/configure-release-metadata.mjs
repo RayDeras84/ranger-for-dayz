@@ -10,6 +10,7 @@ if (!owner || !repo) {
 const packagePath = new URL("../package.json", import.meta.url);
 const packageJson = JSON.parse(fs.readFileSync(packagePath, "utf8"));
 const projectUrl = `https://github.com/${owner}/${repo}`;
+const privateUpdates = process.env.RFDZ_PRIVATE_UPDATE_REPO === "true";
 
 packageJson.homepage = `${projectUrl}#readme`;
 packageJson.repository = {
@@ -23,10 +24,11 @@ packageJson.build = {
       provider: "github",
       owner,
       repo,
+      ...(privateUpdates ? { private: true } : {}),
       releaseType: "draft"
     }
   ]
 };
 
 fs.writeFileSync(packagePath, `${JSON.stringify(packageJson, null, 2)}\n`);
-console.log(`Configured release metadata for ${owner}/${repo}.`);
+console.log(`Configured release metadata for ${owner}/${repo}${privateUpdates ? " with private update support" : ""}.`);

@@ -1,6 +1,6 @@
 {
   "name": "ranger-for-dayz",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "An unofficial DayZ server browser, mod helper, and launcher.",
   "main": "electron/main.js",
   "type": "module",
@@ -15,6 +15,7 @@
     "package": "npm run package:win",
     "package:win": "node scripts/package-local.mjs nsis",
     "package:portable": "node scripts/package-local.mjs portable",
+    "package:update-test": "node scripts/package-local.mjs nsis --update-config",
     "release": "npm run configure-release && npm run build && electron-builder --win nsis --publish never"
   },
   "keywords": [
