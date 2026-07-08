@@ -1,8 +1,18 @@
 # Ranger for DayZ
 
-Ranger for DayZ is an unofficial Windows desktop launcher for browsing DayZ servers, checking required Steam Workshop mods, syncing missing Workshop items, and launching DayZ with the selected server and mod list.
+Ranger for DayZ is an unofficial Windows DayZ server browser, DayZ launcher, and Steam Workshop mod sync helper. It helps players browse public DayZ servers, check required Workshop mods, sync missing items, and launch DayZ with the selected server and mod list.
 
 This project is not affiliated with, sponsored by, or endorsed by Bohemia Interactive, DayZ, Valve, Steam, or BattleMetrics. DayZ and related trademarks belong to Bohemia Interactive. Steam and Steam Workshop belong to Valve. BattleMetrics server data belongs to BattleMetrics and its data providers.
+
+![Ranger for DayZ server browser screenshot](docs/images/ranger-server-browser.png)
+
+## Download
+
+Download the latest Windows installer from [GitHub Releases](https://github.com/RayDeras84/ranger-for-dayz/releases/latest).
+
+Current installer: [Ranger-for-DayZ-Setup-0.0.4-x64.exe](https://github.com/RayDeras84/ranger-for-dayz/releases/download/v0.0.4/Ranger-for-DayZ-Setup-0.0.4-x64.exe)
+
+Windows installers are currently unsigned so this project can stay cost-free. Windows may show an "Unknown Publisher" or SmartScreen warning when installing a release, especially while the app is new. Download releases only from this repository's GitHub Releases page.
 
 ## Features
 
@@ -69,11 +79,15 @@ Current verification notes:
 
 Generated installers belong in GitHub Releases, not in git. The `release/` directory is ignored.
 
-Windows installers are currently unsigned so this project can stay cost-free. Windows may show an "Unknown Publisher" or SmartScreen warning when installing a release, especially while the app is new. Download releases only from this repository's GitHub Releases page.
+Windows installers are currently unsigned so this project can stay cost-free. Windows may show an "Unknown Publisher" or SmartScreen warning when installing a release, especially while the app is new.
 
 Local `npm.cmd run package` writes to `%TEMP%\ranger-for-dayz-release` by default to avoid Windows/OneDrive file locking around electron-builder's temporary folders. Set `RFDZ_RELEASE_DIR` to choose a different output folder.
 
 See [RELEASE.md](RELEASE.md) for the Windows installer, signing, and auto-update release flow.
+
+## Support
+
+If Ranger for DayZ helps you, support through [GitHub Sponsors](https://github.com/sponsors/RayDeras84) is appreciated. Sponsors setup may still be pending while the project is new.
 
 ## Privacy And Data
 

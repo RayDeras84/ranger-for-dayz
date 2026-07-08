@@ -39,7 +39,6 @@ jobs:
       - name: Build unsigned release assets
         env:
           GH_TOKEN: ${{ github.token }}
-          RFDZ_PRIVATE_UPDATE_REPO: "true"
         run: npm.cmd run release
 
       - name: Publish draft release assets
