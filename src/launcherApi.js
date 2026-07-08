@@ -1,3 +1,5 @@
+import packageMetadata from "../package.json";
+
 const mockServers = [
   {
     id: "preview-1",
@@ -60,7 +62,7 @@ const fallbackApi = {
   getAppInfo: async () => ({
     name: "Ranger for DayZ",
     productName: "Ranger for DayZ",
-    version: "0.0.3",
+    version: packageMetadata.version,
     description: "An unofficial DayZ server browser, mod helper, and launcher.",
     license: "MIT",
     isPackaged: false,
@@ -149,4 +151,4 @@ const fallbackApi = {
   launch: async () => ({ ok: false, message: "Launch is available in the desktop app." })
 };
 
-export const launcherApi = window.dayz ?? fallbackApi;
+export const launcherApi = globalThis.window?.dayz ?? fallbackApi;

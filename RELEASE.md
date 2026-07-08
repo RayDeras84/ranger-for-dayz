@@ -40,7 +40,7 @@ To build a portable app for quick testing:
 npm.cmd run package:portable
 ```
 
-To build a local NSIS installer that is wired to the GitHub update feed for private-repo update testing:
+To build a local NSIS installer that is wired to a private GitHub update feed for private-fork update testing:
 
 ```powershell
 npm.cmd run package:update-test
@@ -50,7 +50,7 @@ This writes to `%TEMP%\ranger-for-dayz-release` by default and does not upload a
 
 ## GitHub Release Flow
 
-1. Update `version` in `package.json`.
+1. Update `version` in `package.json` and `package-lock.json`.
 2. Run verification locally:
 
    ```powershell
@@ -61,15 +61,15 @@ This writes to `%TEMP%\ranger-for-dayz-release` by default and does not upload a
    ```
 
 3. Commit the version change.
-4. Create and push a version tag:
+4. Create and push a version tag that exactly matches the package version:
 
    ```powershell
-   git tag v0.0.3
+   git tag v0.0.5
    git push origin main --tags
    ```
 
-5. The GitHub Actions `Release` workflow builds the installer, configures the package metadata from `GITHUB_REPOSITORY`, and uploads draft release assets.
-6. Review the draft release notes and publish the release when ready.
+5. The GitHub Actions `Release` workflow verifies that the tag matches `package.json`, confirms the release actor is `RayDeras84`, builds the installer, configures package metadata from `GITHUB_REPOSITORY`, and uploads draft release assets.
+6. Review the draft release notes and assets, then publish the release when ready.
 
 Automatic updates read from the published GitHub Release assets. Users only receive a new version after the release is published.
 
@@ -79,25 +79,17 @@ Automatic update checks only work from packaged Windows installer builds. Vite p
 
 GitHub draft releases are not visible to the updater. The newer version being tested must be a published GitHub Release with the installer, `.blockmap`, and `latest.yml` assets.
 
-While this repository is private, launch the installed app from a PowerShell session that has a GitHub token with read access to the private repository:
-
-```powershell
-$env:GH_TOKEN = "<token>"
-& "$env:LOCALAPPDATA\Programs\Ranger for DayZ\Ranger for DayZ.exe"
-```
-
-Do not commit or embed this token. Public releases do not need a token once the repository is public.
-
 Recommended test sequence:
 
-1. Build or download an installer for the older version. For private-repo testing before the app is public, prefer `npm.cmd run package:update-test` so the installed app knows to use private GitHub release metadata.
-2. Install the older version.
-3. Bump `version` in `package.json` and `package-lock.json` to the next version.
-4. Commit, tag, and push the new version tag.
-5. Let the release workflow create the draft release assets.
-6. Publish the new release.
-7. Launch the older installed app with `GH_TOKEN` set while the repository is private.
-8. In the app, open About, click Check, wait for the download to finish, then click Install.
+1. Install the older published version from GitHub Releases.
+2. Bump `version` in `package.json` and `package-lock.json` to the next version.
+3. Commit, tag, and push the new version tag.
+4. Let the release workflow create the draft release assets.
+5. Publish the new release.
+6. Launch the older installed app normally.
+7. In the app, open About, click Check, wait for the download to finish, then click Install.
+
+For private forks or pre-public testing, build the older installer with `npm.cmd run package:update-test`, launch the installed app from a PowerShell session with `GH_TOKEN` set, and do not commit or embed that token.
 
 ## Signing
 

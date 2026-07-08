@@ -10,7 +10,7 @@ This project is not affiliated with, sponsored by, or endorsed by Bohemia Intera
 
 Download the latest Windows installer from [GitHub Releases](https://github.com/RayDeras84/ranger-for-dayz/releases/latest).
 
-Current installer: [Ranger-for-DayZ-Setup-0.0.4-x64.exe](https://github.com/RayDeras84/ranger-for-dayz/releases/download/v0.0.4/Ranger-for-DayZ-Setup-0.0.4-x64.exe)
+On the latest release page, download the asset named `Ranger-for-DayZ-Setup-<version>-x64.exe`. The `.blockmap` and `latest.yml` assets are for automatic updates.
 
 Windows installers are currently unsigned so this project can stay cost-free. Windows may show an "Unknown Publisher" or SmartScreen warning when installing a release, especially while the app is new. Download releases only from this repository's GitHub Releases page.
 

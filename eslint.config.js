@@ -55,7 +55,7 @@ export default [
     }
   },
   {
-    files: ["electron/main.js", "scripts/**/*.mjs"],
+    files: ["electron/**/*.{js,mjs}", "scripts/**/*.{js,mjs}"],
     languageOptions: {
       ecmaVersion: "latest",
       sourceType: "module",
