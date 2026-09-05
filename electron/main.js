@@ -231,7 +231,7 @@ async function checkForUpdates() {
     });
   }
 
-  if (updateStatus.checking || updateStatus.status === "downloading") {
+  if (updateStatus.checking || ["downloading", "downloaded", "installing"].includes(updateStatus.status)) {
     return updateStatus;
   }
 

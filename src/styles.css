@@ -248,6 +248,44 @@ select {
   font-size: 13px;
 }
 
+.appNotifications {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.updateBanner {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid #9b8650;
+  border-radius: 7px;
+  background: #302b1d;
+  color: #f0d47b;
+}
+
+.updateBannerText {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.updateBannerText strong,
+.updateBannerText span {
+  display: block;
+}
+
+.updateBannerText strong {
+  font-size: 14px;
+}
+
+.updateBannerText span {
+  margin-top: 3px;
+  color: #e3dcc5;
+  font-size: 12px;
+}
+
 .notice {
   border: 1px solid #3c5142;
   background: #18251d;

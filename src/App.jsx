@@ -298,6 +298,7 @@ function App() {
   const mapFilterRef = useRef(null);
   const tableHeadRef = useRef(null);
   const resizeCleanupRef = useRef(null);
+  const updateInstallPendingRef = useRef(false);
   const [serverColumnWidths, setServerColumnWidths] = useState(defaultServerColumnWidths);
   const [serverColumnsFixed, setServerColumnsFixed] = useState(false);
 
@@ -925,12 +926,20 @@ function App() {
   }
 
   async function installUpdate() {
+    if (updateInstallPendingRef.current || appInfo.update.status !== "downloaded") return;
+    updateInstallPendingRef.current = true;
+    const readyUpdate = appInfo.update;
     setError("");
+    setAppInfo((current) => ({ ...current, update: { ...current.update, status: "installing" } }));
     try {
       const update = await launcherApi.installUpdate();
       setAppInfo((current) => ({ ...current, update: { ...defaultUpdateStatus, ...update } }));
+      if (update.status === "error") setError(`Update install failed: ${update.message}`);
     } catch (err) {
+      setAppInfo((current) => ({ ...current, update: readyUpdate }));
       setError(`Update install failed: ${err.message}`);
+    } finally {
+      updateInstallPendingRef.current = false;
     }
   }
 
@@ -992,8 +1001,27 @@ function App() {
           </button>
         </header>
 
-        {notice && <div className="notice">{notice}</div>}
-        {error && <div className="error">{error}</div>}
+        <div className="appNotifications">
+          {["downloaded", "installing"].includes(appInfo.update.status) && (
+            <section className="updateBanner" aria-label="Application update">
+              {appInfo.update.status === "installing"
+                ? <Loader2 className="spin" size={20} aria-hidden="true" />
+                : <Download size={20} aria-hidden="true" />}
+              <div className="updateBannerText" role="status" aria-live="polite" aria-atomic="true">
+                <strong>{appInfo.update.status === "installing" ? "Restarting to install update..." : "Update ready to install"}</strong>
+                <span>{appInfo.update.status === "installing"
+                  ? "Ranger will reopen when the update is installed."
+                  : `${appInfo.update.updateInfo?.version ? `Version ${appInfo.update.updateInfo.version} is downloaded. ` : ""}Restart Ranger to finish updating.`}</span>
+              </div>
+              <button className="toolButton" onClick={installUpdate} disabled={appInfo.update.status === "installing"}>
+                <RefreshCcw size={16} aria-hidden="true" />
+                {appInfo.update.status === "installing" ? "Restarting..." : "Restart & install"}
+              </button>
+            </section>
+          )}
+          {notice && <div className="notice">{notice}</div>}
+          {error && <div className="error">{error}</div>}
+        </div>
 
         {activeView === "servers" && (
           <section className="workspace">
@@ -1640,7 +1668,7 @@ function AboutView({ appInfo, onCheckUpdates, onInstallUpdate, onOpenExternal })
           </div>
         )}
         <div className="aboutActions">
-          <button className="toolButton" onClick={onCheckUpdates} disabled={isBusy}>
+          <button className="toolButton" onClick={onCheckUpdates} disabled={isBusy || canInstall}>
             {isBusy ? <Loader2 className="spin" size={17} /> : <RefreshCcw size={17} />}
             Check
           </button>
