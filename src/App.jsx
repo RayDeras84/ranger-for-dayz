@@ -166,6 +166,7 @@ function serverSearchText(server) {
     server.port,
     server.map,
     server.country,
+    server.official ? "official public" : "community private",
     ...(server.modNames || [])
   ].filter(Boolean).join(" ");
 }
@@ -601,7 +602,7 @@ function App() {
       const refreshed = await launcherApi.refreshServer(server);
       setServers((current) => mergeServers(current, [refreshed]));
       setSelectedId(refreshed.id);
-      setNotice(`Refreshed ${refreshed.name}: ${refreshed.players}/${refreshed.maxPlayers || "?"} players, ${pingLabel(refreshed)} ping.`);
+      setNotice(refreshed.sourceWarning || `Refreshed ${refreshed.name}: ${refreshed.players}/${refreshed.maxPlayers || "?"} players, ${pingLabel(refreshed)} ping.`);
     } catch (err) {
       setError(`Could not refresh ${server.name}: ${err.message}`);
     } finally {
@@ -1431,7 +1432,7 @@ function ServerDetails({
 
       <button className="linkButton" onClick={() => launcherApi.openSteam(server.sourceUrl)}>
         <ExternalLink size={16} />
-        BattleMetrics profile
+        {server.sourceLabel ? `${server.sourceLabel} source` : "Server source"}
       </button>
       <button className="linkButton" onClick={onMissingMods} disabled={!status.missing.length}>
         <ExternalLink size={16} />
@@ -1674,7 +1675,7 @@ function AboutView({ appInfo, onCheckUpdates, onInstallUpdate, onOpenExternal })
       </div>
 
       <p className="aboutDisclaimer">
-        Ranger for DayZ is an unofficial community tool and is not affiliated with Bohemia Interactive, DayZ, Valve, Steam, or BattleMetrics.
+        Ranger for DayZ is an unofficial community tool and is not affiliated with Bohemia Interactive, DayZ, Valve, Steam, or DZSA Launcher.
       </p>
 
       <details className="detailsPanel">

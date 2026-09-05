@@ -25,7 +25,7 @@ Some checks may need repository setup work before they pass. If lint or tests ca
 
 - Keep renderer code free of Node and Electron imports.
 - Add or change native capabilities through all IPC layers together: `electron/main.js`, `electron/preload.cjs`, and `src/launcherApi.js`.
-- Preserve fallback behavior for missing Steam, missing DayZ executables, unavailable Workshop items, partial installs, and BattleMetrics/API failures.
+- Preserve fallback behavior for missing Steam, missing DayZ executables, unavailable Workshop items, partial installs, and server-list API failures.
 - Keep UI changes compact and consistent with the existing desktop app style.
 - Do not commit generated folders such as `dist/`, `release/`, `.tmp/`, or `node_modules/`.
 - Do not commit DayZ game assets, Workshop mod content, or third-party proprietary assets.

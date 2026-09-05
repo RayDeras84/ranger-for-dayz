@@ -23,4 +23,4 @@ Direct development dependencies:
 
 The current transitive dependency set is primarily MIT, ISC, Apache-2.0, BSD-2-Clause, BSD-3-Clause, 0BSD, BlueOak-1.0.0, Python-2.0, WTFPL, and CC-BY-4.0. Generate a full notice file from the lockfile before publishing packaged binaries.
 
-This repository should not contain DayZ game files, Bohemia Interactive logos, Steam assets, BattleMetrics assets, or Steam Workshop mod content.
+This repository should not contain DayZ game files, Bohemia Interactive logos, Steam assets, DZSA Launcher assets, BattleMetrics assets, or Steam Workshop mod content.

@@ -1,4 +1,7 @@
-const BASE = "https://api.battlemetrics.com/servers";
+import { DZSA_SERVER_LIST_URL, normalizeDzsaServer, selectDzsaServers } from "../electron/server-utils.mjs";
+
+const BASE = DZSA_SERVER_LIST_URL;
+let catalogPromise;
 
 function normalizeMap(value) {
   return String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
@@ -16,57 +19,22 @@ function searchAliases(value) {
   return [...aliases].filter((alias) => alias.length >= 3);
 }
 
-function inferMap(server) {
-  const text = `${server.name} ${server.modNames.join(" ")}`.toLowerCase();
-  if (/stuart\s*island|stuartisland/.test(text)) return "Stuart Island";
-  if (/deer\s*isle|deerisle/.test(text)) return "Deer Isle";
-  if (/livonia|enoch/.test(text)) return "Livonia";
-  if (/namalsk/.test(text)) return "Namalsk";
-  if (/chernarus|chernarusplus|chernarus\+/.test(text)) return "ChernarusPlus";
-  return server.map || "Unknown";
-}
-
-function normalizeServer(item) {
-  const attr = item.attributes || {};
-  const details = attr.details || {};
-  const modNames = Array.isArray(details.modNames) ? details.modNames : [];
-  return {
-    id: item.id,
-    name: attr.name || "",
-    ip: attr.ip || details.address || "",
-    port: Number(attr.port || details.port || 0),
-    players: Number(attr.players || 0),
-    maxPlayers: Number(attr.maxPlayers || 0),
-    map: inferMap({
-      name: attr.name || "",
-      map: details.map || details.mission || attr.map || "",
-      modNames
-    }),
-    official: Boolean(details.official),
-    password: Boolean(details.password || details.private),
-    modded: Boolean(details.modded || modNames.length || details.modIds?.length),
-    modNames
-  };
-}
-
-async function fetchBattleMetrics({ search = "", limit = 100, sort = "-players" } = {}) {
-  const params = new URLSearchParams({
-    "filter[game]": "dayz",
-    "page[size]": String(Math.min(limit, 100)),
-    sort
-  });
-  if (search) params.set("filter[search]", search);
-  let url = `${BASE}?${params.toString()}`;
-  const servers = [];
-  while (url && servers.length < limit) {
-    const response = await fetch(url, { headers: { Accept: "application/json" } });
-    if (!response.ok) throw new Error(`BattleMetrics ${response.status} for ${search || "default"}`);
-    const payload = await response.json();
-    servers.push(...(payload.data || []).map(normalizeServer));
-    url = payload.links?.next || "";
+async function fetchCatalog() {
+  if (!catalogPromise) {
+    catalogPromise = fetch(BASE, { headers: { Accept: "application/json" }, signal: globalThis.AbortSignal.timeout(30000) })
+      .then(async (response) => {
+        if (!response.ok) throw new Error(`DZSA Launcher ${response.status}`);
+        const payload = await response.json();
+        if (payload?.status !== 0 || !Array.isArray(payload.result)) throw new Error("DZSA Launcher returned an invalid list");
+        return payload.result.map(normalizeDzsaServer);
+      });
   }
-  servers.length = Math.min(servers.length, limit);
-  return servers;
+  return catalogPromise;
+}
+
+async function fetchDzsaServers({ search = "", limit = 100, sort = "-players" } = {}) {
+  const catalog = await fetchCatalog();
+  return selectDzsaServers(catalog, { search, limit, sort });
 }
 
 function localFilter(servers, { query = "", map = "", officialOnly = false } = {}) {
@@ -79,6 +47,7 @@ function localFilter(servers, { query = "", map = "", officialOnly = false } = {
       server.ip,
       server.port,
       server.map,
+      server.official ? "official public" : "community private",
       ...server.modNames
     ].filter(Boolean).join(" ").toLowerCase();
     const compactText = normalizeMap(text);
@@ -91,7 +60,7 @@ function localFilter(servers, { query = "", map = "", officialOnly = false } = {
 
 async function targetedSearch(query) {
   const terms = [...new Set(searchAliases(query))];
-  const batches = await Promise.all(terms.slice(0, 4).map((term) => fetchBattleMetrics({ search: term, limit: 300 })));
+  const batches = await Promise.all(terms.slice(0, 4).map((term) => fetchDzsaServers({ search: term, limit: 300 })));
   const byId = new Map();
   for (const server of batches.flat()) byId.set(server.id, server);
   return [...byId.values()];
@@ -123,15 +92,21 @@ cases.push(assertCase(
   localFilter(stuart, { query: "stuartisland", map: "Stuart Island" }).map((server) => server.name).slice(0, 10).join("\n")
 ));
 
-const official = await fetchBattleMetrics({ search: "official", limit: 100 });
+const official = await fetchDzsaServers({ limit: 5000 });
 const officialOnly = localFilter(official, { officialOnly: true });
+const officialSearch = await fetchDzsaServers({ search: "official", limit: 100 });
+cases.push(assertCase(
+  "Official text search survives renderer filtering",
+  officialSearch.some((server) => server.official) && localFilter(officialSearch, { query: "official" }).length === officialSearch.length,
+  `${officialSearch.length} official search results remain visible`
+));
 cases.push(assertCase(
   "Official filter only keeps official servers",
-  officialOnly.length === 0 || officialOnly.every((server) => server.official),
+  officialOnly.length > 0 && officialOnly.every((server) => server.official),
   `${officialOnly.length}/${official.length} official from sample`
 ));
 
-const defaultSample = await fetchBattleMetrics({ limit: 100 });
+const defaultSample = await fetchDzsaServers({ limit: 100 });
 cases.push(assertCase(
   "Default sample includes full/password/empty candidates instead of hiding by default",
   defaultSample.length === 100,

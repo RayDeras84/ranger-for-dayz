@@ -15,6 +15,8 @@ import {
   parseVdfObject,
   pingStatusFromMs
 } from "./core-utils.mjs";
+import { selectDzsaServers, migrateServerState } from "./server-utils.mjs";
+import { createServerCatalog, refreshServerDetails } from "./server-catalog.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const require = createRequire(import.meta.url);
@@ -40,6 +42,7 @@ let steamClient = null;
 let serverDiscoveryRun = 0;
 let workshopSyncRun = 0;
 let workshopSyncCancel = null;
+const fetchDzsaServerCatalog = createServerCatalog();
 let updateStatus = {
   status: "idle",
   message: "Updates have not been checked yet.",
@@ -1001,45 +1004,6 @@ function readMetaName(modFolder) {
   }
 }
 
-function normalizeBattleMetricsServer(item) {
-  const attr = item.attributes ?? {};
-  const details = attr.details ?? {};
-  const ip = attr.ip || details.address || "";
-  const port = Number(attr.port || details.port || 2302);
-  const queryPort = Number(details.queryPort || attr.portQuery || port + 1);
-  const rank = attr.rank ?? null;
-  const explicitMap = normalizeMapName(details.map || details.mission || attr.map || "");
-  const inferredMap = inferMapFromText(`${attr.name || ""} ${details.modNames?.join(" ") || ""}`);
-
-  return {
-    id: item.id,
-    name: attr.name || "Unnamed DayZ server",
-    ip,
-    port,
-    queryPort,
-    players: Number(attr.players ?? 0),
-    maxPlayers: Number(attr.maxPlayers ?? 0),
-    pingMs: null,
-    pingStatus: "unknown",
-    lastPingAt: "",
-    rank,
-    map: explicitMap !== "Unknown" ? explicitMap : inferredMap || "Unknown",
-    mapSource: explicitMap !== "Unknown" ? "source" : inferredMap ? "inferred" : "unknown",
-    status: attr.status || "unknown",
-    country: attr.country || details.country || "",
-    version: details.version || details.gameVersion || "",
-    password: Boolean(details.password || details.private),
-    official: Boolean(details.official),
-    modded: Boolean(details.modded || details.mods?.length),
-    firstPerson: details.third_person === false || details.thirdPerson === false || details.perspective === "1pp",
-    time: details.time || "",
-    details,
-    modIds: extractModIds(details),
-    modNames: Array.isArray(details.modNames) ? details.modNames : [],
-    sourceUrl: `https://www.battlemetrics.com/servers/dayz/${item.id}`
-  };
-}
-
 function readCString(buffer, offset) {
   const end = buffer.indexOf(0, offset);
   if (end === -1) return ["", buffer.length];
@@ -1188,96 +1152,17 @@ async function enrichMaps(servers, concurrency = 20) {
   return servers.map((server) => byId.get(server.id) || server);
 }
 
-function extractModIds(details) {
-  const direct = [
-    ...(Array.isArray(details.mods) ? details.mods : []),
-    ...(Array.isArray(details.modIds) ? details.modIds : []),
-    ...(Array.isArray(details.requiredMods) ? details.requiredMods : [])
-  ];
-
-  const candidates = direct
-    .map((mod) => {
-      if (typeof mod === "string" || typeof mod === "number" || typeof mod === "bigint") return mod;
-      return mod?.id || mod?.workshopId || mod?.steamWorkshopId;
-    })
-    .filter(Boolean);
-
-  for (const value of Object.values(details)) {
-    if (typeof value === "string") {
-      for (const match of value.matchAll(/\b\d{8,12}\b/g)) candidates.push(match[0]);
-    }
-  }
-
-  return [...new Set(candidates.map(String))];
-}
-
 async function fetchServers(options = {}) {
-  const limit = Math.min(Number(options.limit || 500), 1000);
-  const size = Math.min(Number(options.pageSize || limit), 100);
-  const params = new URLSearchParams();
-  params.set("filter[game]", "dayz");
-  params.set("page[size]", String(size));
-  params.set("sort", options.sort || "-players");
-  if (options.search) params.set("filter[search]", options.search);
-  if (options.country) params.set("filter[countries][]", options.country);
-
-  let url = `https://api.battlemetrics.com/servers?${params.toString()}`;
-  const servers = [];
-  while (url && servers.length < limit) {
-    const payload = await fetchBattleMetricsPage(url);
-    servers.push(...(payload.data || []).map(normalizeBattleMetricsServer));
-    url = payload.links?.next || "";
-  }
-
-  servers.length = Math.min(servers.length, limit);
-  return enrichMaps(servers);
-}
-
-function battleMetricsServerId(server) {
-  const direct = String(server?.id || "").trim();
-  if (/^\d+$/.test(direct)) return direct;
-  const sourceMatch = String(server?.sourceUrl || "").match(/\/servers\/dayz\/(\d+)/);
-  return sourceMatch?.[1] || "";
+  const catalog = await fetchDzsaServerCatalog();
+  return selectDzsaServers(catalog, {
+    ...options,
+    limit: Math.min(Number(options.limit || 500), 1000)
+  });
 }
 
 async function refreshServer(server = {}) {
-  const id = battleMetricsServerId(server);
-  if (!id) throw new Error("This server does not have a BattleMetrics id to refresh.");
-  const payload = await fetchBattleMetricsPage(`https://api.battlemetrics.com/servers/${encodeURIComponent(id)}`);
-  const refreshed = normalizeBattleMetricsServer(payload.data);
-  return enrichServerMap(refreshed, { maxCandidates: Infinity, timeoutMs: 1400 });
-}
-
-function buildBattleMetricsUrl(options = {}) {
-  const limit = Math.min(Number(options.limit || 2000), 5000);
-  const size = Math.min(Number(options.pageSize || 100), 100);
-  const params = new URLSearchParams();
-  params.set("filter[game]", "dayz");
-  params.set("page[size]", String(size));
-  params.set("sort", options.sort || "-players");
-  if (options.search) params.set("filter[search]", options.search);
-  if (options.country) params.set("filter[countries][]", options.country);
-  return { url: `https://api.battlemetrics.com/servers?${params.toString()}`, limit };
-}
-
-function isTransientHttpStatus(status) {
-  return [429, 502, 503, 504].includes(status);
-}
-
-async function fetchBattleMetricsPage(url, attempts = 3) {
-  let lastStatus = 0;
-  for (let attempt = 1; attempt <= attempts; attempt += 1) {
-    const response = await fetch(url, {
-      headers: { "Accept": "application/json" }
-    });
-    if (response.ok) return response.json();
-    lastStatus = response.status;
-    if (!isTransientHttpStatus(response.status) || attempt === attempts) {
-      throw new Error(`BattleMetrics returned ${response.status}`);
-    }
-    await delay(700 * attempt);
-  }
-  throw new Error(`BattleMetrics returned ${lastStatus}`);
+  return refreshServerDetails(server, fetchDzsaServerCatalog, (current) =>
+    enrichServerMap(current, { maxCandidates: Infinity, timeoutMs: 1400 }));
 }
 
 function emitDiscovery(sender, payload) {
@@ -1287,90 +1172,70 @@ function emitDiscovery(sender, payload) {
 async function discoverServers(event, options = {}) {
   const runId = ++serverDiscoveryRun;
   const sender = event?.sender;
-  const { limit, url: firstUrl } = buildBattleMetricsUrl(options);
-  let url = firstUrl;
+  const limit = Math.min(Number(options.limit || 2000), 5000);
+  const pageSize = Math.min(Math.max(250, Number(options.pageSize || 250)), 500);
   let totalFetched = 0;
   let page = 0;
-  let mappingChain = Promise.resolve();
 
   emitDiscovery(sender, { runId, phase: "started", limit, totalFetched: 0, batch: [] });
 
   try {
-    while (url && totalFetched < limit && runId === serverDiscoveryRun) {
-      page += 1;
-      let payload;
-      try {
-        payload = await fetchBattleMetricsPage(url);
-      } catch (error) {
-        emitDiscovery(sender, {
-          runId,
-          phase: "warning",
-          message: `${error.message}; stopped discovery at ${totalFetched}/${limit} servers.`,
-          totalFetched,
-          limit,
-          batch: []
-        });
-        break;
-      }
-      const rawBatch = (payload.data || []).map(normalizeBattleMetricsServer);
-      if (!rawBatch.length) break;
+    const catalog = await fetchDzsaServerCatalog();
+    const selected = selectDzsaServers(catalog, { ...options, limit });
 
-      const allowed = rawBatch.slice(0, Math.max(0, limit - totalFetched));
-      totalFetched += allowed.length;
+    for (let offset = 0; offset < selected.length && runId === serverDiscoveryRun; offset += pageSize) {
+      const batch = selected.slice(offset, offset + pageSize);
+      page += 1;
+      totalFetched += batch.length;
       emitDiscovery(sender, {
         runId,
         phase: "page",
         page,
         totalFetched,
         limit,
-        batch: allowed
+        sourceTotal: catalog.length,
+        batch
       });
+      await delay(0);
+    }
 
-      const pageNumber = page;
-      const totalFetchedForPage = totalFetched;
-      mappingChain = mappingChain.then(() => enrichMaps(allowed, 24)).then((mappedBatch) => {
+    if (runId === serverDiscoveryRun) {
+      emitDiscovery(sender, { runId, phase: "complete", totalFetched, limit, sourceTotal: catalog.length, batch: [] });
+
+      const pingCandidates = selected.slice(0, 200);
+      void enrichMaps(pingCandidates, 24).then((mappedBatch) => {
         if (runId !== serverDiscoveryRun) return;
         emitDiscovery(sender, {
           runId,
           phase: "mapped",
-          page: pageNumber,
-          totalFetched: totalFetchedForPage,
+          totalFetched,
           limit,
+          sourceTotal: catalog.length,
           batch: mappedBatch
         });
-      }).catch((error) => {
-        if (runId !== serverDiscoveryRun) return;
-        emitDiscovery(sender, {
-          runId,
-          phase: "warning",
-          message: error.message,
-          batch: []
-        });
+        emitDiscovery(sender, { runId, phase: "complete", totalFetched, limit, sourceTotal: catalog.length, batch: [] });
+      }).catch(() => {
+        // The feed data remains usable when direct A2S ping checks are blocked.
       });
-
-      url = totalFetched >= limit ? "" : payload.links?.next || "";
-    }
-
-    if (runId === serverDiscoveryRun) {
-      emitDiscovery(sender, { runId, phase: "complete", totalFetched, limit, batch: [] });
     }
   } catch (error) {
     if (runId === serverDiscoveryRun) {
       emitDiscovery(sender, { runId, phase: "error", message: error.message, totalFetched, limit, batch: [] });
     }
+    return { ok: false, runId, totalFetched, limit, message: error.message };
   }
 
   return { ok: runId === serverDiscoveryRun, runId, totalFetched, limit };
 }
 
 function getState() {
-  return readJson(settingsPath(), {
+  return migrateServerState(readJson(settingsPath(), {
     favorites: [],
     recents: [],
     playerName: os.userInfo().username || "Survivor",
     launchExtraArgs: "",
     preferBattlEye: true
-  });
+  }));
 }
 
 function saveSettings(patch) {

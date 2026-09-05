@@ -1,6 +1,6 @@
 {
   "name": "ranger-for-dayz",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "An unofficial DayZ server browser, mod helper, and launcher.",
   "main": "electron/main.js",
   "type": "module",

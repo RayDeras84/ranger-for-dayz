@@ -118,6 +118,7 @@ export function isAllowedExternalUrl(value, { repositoryUrl = "", fundingUrl = "
     const parsed = new URL(url);
     if (parsed.protocol !== "https:") return false;
     if (parsed.hostname === "www.battlemetrics.com") return parsed.pathname.startsWith("/servers/dayz");
+    if (parsed.hostname === "dayzsalauncher.com") return parsed.pathname === "/";
     if (parsed.hostname !== "github.com") return false;
 
     const normalizedFunding = normalizeFundingUrl(url);

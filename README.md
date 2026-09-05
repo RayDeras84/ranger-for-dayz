@@ -2,7 +2,7 @@
 
 Ranger for DayZ is an unofficial Windows DayZ server browser, DayZ launcher, and Steam Workshop mod sync helper. It helps players browse public DayZ servers, check required Workshop mods, sync missing items, and launch DayZ with the selected server and mod list.
 
-This project is not affiliated with, sponsored by, or endorsed by Bohemia Interactive, DayZ, Valve, Steam, or BattleMetrics. DayZ and related trademarks belong to Bohemia Interactive. Steam and Steam Workshop belong to Valve. BattleMetrics server data belongs to BattleMetrics and its data providers.
+This project is not affiliated with, sponsored by, or endorsed by Bohemia Interactive, DayZ, Valve, Steam, or DZSA Launcher. DayZ and related trademarks belong to Bohemia Interactive. Steam and Steam Workshop belong to Valve. Public server-list data is supplied by DZSA Launcher.
 
 ![Ranger for DayZ server browser screenshot](docs/images/ranger-server-browser.png)
 
@@ -16,7 +16,7 @@ Windows installers are currently unsigned so this project can stay cost-free. Wi
 
 ## Features
 
-- Browse public DayZ servers from BattleMetrics.
+- Browse public DayZ servers from the DZSA Launcher feed.
 - Filter by search text, map, player count, password, modded status, official status, and favorites.
 - Enrich server map/ping details through DayZ server query responses when available.
 - Detect Steam, DayZ, Workshop, DZSA, and local mod folders on Windows.
@@ -59,12 +59,12 @@ Current verification notes:
 - `npm.cmd run package` builds a Windows installer in `release/`.
 - `npm.cmd run lint` runs ESLint with the flat config in `eslint.config.js`.
 - `npm.cmd test` runs Vitest.
-- BattleMetrics-backed QA depends on network availability.
+- DZSA-backed server QA depends on network availability.
 - Steamworks checks depend on Steam, DayZ ownership/install state, and the `steamworks.js` native integration.
 
 ## Project Layout
 
-- `electron/main.js`: Electron main process, native integrations, BattleMetrics fetches, server query enrichment, Workshop sync, and launch flow.
+- `electron/main.js`: Electron main process, native integrations, DZSA server-list fetches, direct server query enrichment, Workshop sync, and launch flow.
 - `electron/preload.cjs`: context-isolated IPC bridge exposed as `window.dayz`.
 - `src/launcherApi.js`: renderer adapter with a browser-preview fallback.
 - `src/App.jsx`: main React UI.
@@ -95,7 +95,7 @@ Ranger for DayZ stores settings, favorites, and recent servers in Electron's loc
 
 The app contacts external services as part of normal operation:
 
-- BattleMetrics for public DayZ server listings.
+- DZSA Launcher for public DayZ server listings.
 - Steam and Steam Workshop for Workshop pages, subscriptions, and item download status.
 - Public DayZ server query ports for map and ping enrichment.
 

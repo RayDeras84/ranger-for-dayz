@@ -23,7 +23,8 @@ const mockServers = [
     firstPerson: true,
     time: "15:42",
     modIds: ["1559212036", "1564026768", "1797720064"],
-    sourceUrl: "https://www.battlemetrics.com/servers/dayz"
+    sourceLabel: "DZSA Launcher",
+    sourceUrl: "https://dayzsalauncher.com/"
   },
   {
     id: "preview-2",
@@ -47,7 +48,8 @@ const mockServers = [
     firstPerson: false,
     time: "09:18",
     modIds: [],
-    sourceUrl: "https://www.battlemetrics.com/servers/dayz"
+    sourceLabel: "DZSA Launcher",
+    sourceUrl: "https://dayzsalauncher.com/"
   }
 ];
 

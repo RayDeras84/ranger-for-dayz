@@ -60,6 +60,8 @@ describe("core Electron helpers", () => {
     expect(isAllowedExternalUrl("steam://connect/127.0.0.1:2302", context)).toBe(true);
     expect(isAllowedExternalUrl("steam://url/CommunityFilePage/123456", context)).toBe(true);
     expect(isAllowedExternalUrl("https://www.battlemetrics.com/servers/dayz/123", context)).toBe(true);
+    expect(isAllowedExternalUrl("https://dayzsalauncher.com/", context)).toBe(true);
+    expect(isAllowedExternalUrl("https://dayzsalauncher.com/api/v1/launcher/servers/dayz", context)).toBe(false);
     expect(isAllowedExternalUrl("https://github.com/RayDeras84/ranger-for-dayz/releases/latest", context)).toBe(true);
     expect(isAllowedExternalUrl("https://github.com/sponsors/RayDeras84", context)).toBe(true);
     expect(isAllowedExternalUrl("https://github.com/other/ranger-for-dayz", context)).toBe(false);
