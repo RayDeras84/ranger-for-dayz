@@ -17,6 +17,7 @@ import {
 } from "./core-utils.mjs";
 import { selectDzsaServers, migrateServerState } from "./server-utils.mjs";
 import { createServerCatalog, refreshServerDetails } from "./server-catalog.mjs";
+import { startBackgroundUpdateChecks } from "./update-checks.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const require = createRequire(import.meta.url);
@@ -43,6 +44,7 @@ let serverDiscoveryRun = 0;
 let workshopSyncRun = 0;
 let workshopSyncCancel = null;
 const fetchDzsaServerCatalog = createServerCatalog();
+let stopBackgroundUpdateChecks = null;
 let updateStatus = {
   status: "idle",
   message: "Updates have not been checked yet.",
@@ -243,7 +245,8 @@ async function checkForUpdates() {
       progress: 0,
       error: ""
     });
-    await autoUpdater.checkForUpdates();
+    const result = await autoUpdater.checkForUpdates();
+    await result?.downloadPromise;
     return updateStatus;
   } catch (error) {
     return emitUpdateStatus({
@@ -1411,10 +1414,8 @@ app.whenReady().then(() => {
 
   createWindow();
 
-  if (!smokeTest && !rendererSmokeTest) {
-    setTimeout(() => {
-      checkForUpdates().catch(() => {});
-    }, 5000);
+  if (!smokeTest && !rendererSmokeTest && updatesCanRun()) {
+    stopBackgroundUpdateChecks = startBackgroundUpdateChecks(checkForUpdates);
   }
 
   app.on("activate", () => {
@@ -1424,4 +1425,8 @@ app.whenReady().then(() => {
 
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") app.quit();
+});
+
+app.on("before-quit", () => {
+  stopBackgroundUpdateChecks?.();
 });
