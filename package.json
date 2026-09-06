@@ -1,13 +1,13 @@
 {
   "name": "ranger-for-dayz",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "An unofficial DayZ server browser, mod helper, and launcher.",
   "main": "electron/main.js",
   "type": "module",
   "scripts": {
     "prepare-icon": "node scripts/create-icon.mjs",
     "configure-release": "node scripts/configure-release-metadata.mjs",
-    "dev": "concurrently -k \"vite --host 127.0.0.1\" \"wait-on http://127.0.0.1:5173 && electron .\"",
+    "dev": "concurrently -k \"vite --host 127.0.0.1\" \"wait-on http://127.0.0.1:5173 && electron . --dev\"",
     "build": "vite build",
     "start": "electron .",
     "lint": "eslint .",

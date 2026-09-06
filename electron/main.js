@@ -22,7 +22,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const require = createRequire(import.meta.url);
 const packageMetadata = require("../package.json");
 const { autoUpdater } = require("electron-updater");
-const isDev = !app.isPackaged;
+const isDev = !app.isPackaged && process.argv.includes("--dev");
 const smokeTest = process.argv.includes("--smoke-test");
 const rendererSmokeTest = process.argv.includes("--renderer-smoke-test");
 const steamProbeTest = process.argv.includes("--steam-probe-test");
@@ -1307,6 +1307,7 @@ function createWindow() {
     height: 900,
     minWidth: 1080,
     minHeight: 680,
+    show: false,
     autoHideMenuBar: true,
     backgroundColor: "#101315",
     title: "Ranger for DayZ",
@@ -1320,6 +1321,11 @@ function createWindow() {
   });
   win.removeMenu();
   win.setMenuBarVisibility(false);
+  win.once("ready-to-show", () => {
+    if (win.isDestroyed()) return;
+    win.show();
+    win.webContents.invalidate();
+  });
 
   if (isDev) {
     win.loadURL("http://127.0.0.1:5173");
